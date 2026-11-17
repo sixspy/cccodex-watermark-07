@@ -1,0 +1,12 @@
+{
+  "label": "watermark-07",
+  "port": 7360,
+  "login_url": "http://127.0.0.1:7360/login",
+  "http_status": 200,
+  "checks": [
+    "含登录相关文案",
+    "含密码表单线索"
+  ],
+  "passed": true,
+  "checked_at": "2026-11-18T04:17:55+08:00"
+}
