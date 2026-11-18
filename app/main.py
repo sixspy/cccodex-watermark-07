@@ -7,13 +7,16 @@ from itsdangerous import BadSignature, URLSafeSerializer
 from app.config import Config
 from app.db import init_db
 from app.services import (
+    FORM_MARKER,
     get_batch,
+    get_report,
     list_batches,
     list_reports,
     list_templates,
-    run_gap_report,
+    run_gap_report_async,
     stamp_batch,
     trace_downstream,
+    void_batch,
 )
 from app.services.errors import ServiceError
 
@@ -174,6 +177,17 @@ async def api_stamp(request: Request):
     return json_response({"ok": True, "batch": batch})
 
 
+@app.router.post("/api/batches/{batch_id}/void")
+async def api_void(request: Request):
+    try:
+        require_user(request)
+        batch_id = int(request.route_values["batch_id"])
+        batch = void_batch(batch_id)
+    except ServiceError as exc:
+        return json_response({"ok": False, "error": exc.message}, exc.status_code)
+    return json_response({"ok": True, "batch": batch})
+
+
 @app.router.post("/api/trace")
 async def api_trace(request: Request):
     try:
@@ -191,7 +205,20 @@ async def api_gap_list(request: Request):
         require_user(request)
     except ServiceError as exc:
         return json_response({"error": exc.message}, exc.status_code)
-    return json_response({"items": list_reports()})
+    return json_response({"items": list_reports(), "form_marker": FORM_MARKER})
+
+
+@app.router.get("/api/gap-reports/{report_id}")
+async def api_gap_detail(request: Request):
+    try:
+        require_user(request)
+        report_id = int(request.route_values["report_id"])
+        report = get_report(report_id)
+    except ServiceError as exc:
+        return json_response({"error": exc.message}, exc.status_code)
+    if not report:
+        return json_response({"error": "对账包不存在"}, 404)
+    return json_response({"report": report})
 
 
 @app.router.post("/api/gap-reports")
@@ -201,5 +228,10 @@ async def api_gap_run(request: Request):
     except ServiceError as exc:
         return json_response({"error": exc.message}, exc.status_code)
     body = await request.json()
-    report = run_gap_report(str(body.get("as_of_date", "2026-11-16")))
+    try:
+        report = await run_gap_report_async(
+            str(body.get("as_of_date", "2026-11-16"))
+        )
+    except ServiceError as exc:
+        return json_response({"ok": False, "error": exc.message}, exc.status_code)
     return json_response({"ok": True, "report": report})

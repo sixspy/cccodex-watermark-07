@@ -24,6 +24,31 @@ def get_batch(batch_id: int, db_path: str | None = None) -> dict | None:
         return dict(row) if row else None
 
 
+def void_batch(
+    batch_id: int,
+    db_path: str | None = None,
+) -> dict:
+    """作废批次：实物保留在 run_batches，缺口复算时计入作废实物、不计应盖印。"""
+    with get_db(db_path) as conn:
+        batch = conn.execute(
+            "SELECT * FROM run_batches WHERE id=?", (batch_id,)
+        ).fetchone()
+        if not batch:
+            raise ServiceError("批次不存在", 404)
+        if batch["status"] == "已作废":
+            raise ServiceError("批次已作废", 409)
+        if batch["status"] == "已盖印":
+            raise ServiceError("已盖印批次不可作废", 409)
+        conn.execute(
+            "UPDATE run_batches SET status='已作废' WHERE id=?",
+            (batch_id,),
+        )
+        row = conn.execute(
+            "SELECT * FROM run_batches WHERE id=?", (batch_id,)
+        ).fetchone()
+        return dict(row)
+
+
 def stamp_batch(
     batch_id: int,
     watermark_value: str,

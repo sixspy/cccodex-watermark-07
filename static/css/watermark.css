@@ -99,3 +99,65 @@ th { color: var(--muted); font-weight: 500; }
   border: 1px dashed var(--line);
   border-radius: 14px;
 }
+.link { color: #3f6b1f; text-decoration: none; font-weight: 650; }
+.link:hover { text-decoration: underline; }
+.row-inline { display: inline-flex; gap: 0.35rem; }
+.danger-btn { color: var(--danger); }
+.chip-void { background: #f3d6d2; color: var(--danger); }
+.marker {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: #e7f5c8;
+  border: 1px solid #b9dd86;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lime-ink);
+  white-space: nowrap;
+}
+.recon-card { margin: 0 0 1.1rem; border-style: solid; }
+.recon-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.small { font-size: 0.8rem; }
+.date-label { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; }
+.gapbar {
+  position: relative;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: #e3e8e2;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+.gapbar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #9ed64e, var(--lime));
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.gapbar-txt {
+  position: relative;
+  display: block;
+  text-align: center;
+  line-height: 1.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lime-ink);
+  white-space: nowrap;
+}
+.gapbar-cell { min-width: 220px; }
+.gapbar-cell .gapbar { margin: 0; height: 1.3rem; }
+.gapbar-cell .gapbar-txt { line-height: 1.3rem; font-size: 0.7rem; }
+.progress { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem; }
+.step {
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--muted);
+}
+.step-active { background: var(--lime); color: var(--lime-ink); border-color: #9ed64e; font-weight: 700; }
+.step-done { background: #e7f5c8; color: var(--lime-ink); border-color: #b9dd86; font-weight: 700; }
+.step-sep { color: var(--muted); }
+.src-code { font-weight: 700; font-family: ui-monospace, "Cascadia Mono", monospace; }

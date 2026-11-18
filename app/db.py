@@ -61,8 +61,24 @@ CREATE TABLE IF NOT EXISTS gap_reports (
   expected_count INTEGER NOT NULL,
   stamped_count INTEGER NOT NULL,
   gap_count INTEGER NOT NULL,
+  voided_count INTEGER NOT NULL DEFAULT 0,
+  form_marker TEXT NOT NULL DEFAULT '旁路快照',
+  check_round INTEGER NOT NULL DEFAULT 2,
   summary TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS gap_report_sources (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  report_id INTEGER NOT NULL REFERENCES gap_reports(id) ON DELETE CASCADE,
+  batch_id INTEGER NOT NULL,
+  run_code TEXT NOT NULL,
+  table_name TEXT NOT NULL,
+  biz_date TEXT NOT NULL,
+  batch_status TEXT NOT NULL,
+  counted_as_expected INTEGER NOT NULL,
+  is_gap INTEGER NOT NULL,
+  is_voided INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS meta (
@@ -91,9 +107,38 @@ SEED_EDGES = [
 ]
 
 
+def _migrate(conn: sqlite3.Connection) -> None:
+    """对已存在的库补齐新版对账表结构（幂等）。"""
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(gap_reports)").fetchall()}
+    if cols:
+        if "voided_count" not in cols:
+            conn.execute("ALTER TABLE gap_reports ADD COLUMN voided_count INTEGER NOT NULL DEFAULT 0")
+        if "form_marker" not in cols:
+            conn.execute("ALTER TABLE gap_reports ADD COLUMN form_marker TEXT NOT NULL DEFAULT '旁路快照'")
+        if "check_round" not in cols:
+            conn.execute("ALTER TABLE gap_reports ADD COLUMN check_round INTEGER NOT NULL DEFAULT 2")
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS gap_report_sources (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          report_id INTEGER NOT NULL REFERENCES gap_reports(id) ON DELETE CASCADE,
+          batch_id INTEGER NOT NULL,
+          run_code TEXT NOT NULL,
+          table_name TEXT NOT NULL,
+          biz_date TEXT NOT NULL,
+          batch_status TEXT NOT NULL,
+          counted_as_expected INTEGER NOT NULL,
+          is_gap INTEGER NOT NULL,
+          is_voided INTEGER NOT NULL
+        )
+        """
+    )
+
+
 def init_db(db_path: str | None = None) -> None:
     with get_db(db_path) as conn:
         conn.executescript(SCHEMA)
+        _migrate(conn)
         row = conn.execute("SELECT value FROM meta WHERE key='seeded'").fetchone()
         if row:
             return
